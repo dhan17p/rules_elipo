@@ -77,6 +77,12 @@ annotate service.main with @(
     UI.Facets                     : [
         {
             $Type : 'UI.ReferenceFacet',
+            Label : 'Assignment Rule Name',
+            ID : 'AssignmentRuleName',
+            Target : '@UI.FieldGroup#AssignmentRuleName',
+        },
+        {
+            $Type : 'UI.ReferenceFacet',
             Label : 'Assignment Rule',
             ID    : 'AssignmentRule',
             Target: 'rell1/@UI.LineItem#AssignmentRule',
@@ -87,6 +93,12 @@ annotate service.main with @(
             ID    : 'Addmembers',
             Target: 'rel12/@UI.LineItem#Addmembers',
         },
+        {
+            $Type : 'UI.ReferenceFacet',
+            Label : 'Comment',
+            ID : 'comm',
+            Target : '@UI.FieldGroup#comm',
+        },
     ]
 );
 
@@ -94,22 +106,22 @@ annotate service.child1 with @(UI.LineItem #AssignmentRule: [
     {
         $Type: 'UI.DataField',
         Value: assighnment_rule_name,
-        Label: 'assighnment_rule_name',
+        Label: 'Assighnment Rule Name',
     },
     {
         $Type: 'UI.DataField',
         Value: assignment_criteria,
-        Label: 'assignment_criteria',
+        Label: 'Assignment Criteria',
     },
     {
         $Type: 'UI.DataField',
         Value: condition,
-        Label: 'condition',
+        Label: 'Condition',
     },
     {
         $Type         : 'UI.DataField',
         Value         : amount,
-        Label         : 'amount',
+        Label         : 'Amount',
         ![@UI.Hidden] : {$edmJson: {$Not: {$Or: [
             {$Or: [
                 {$Eq: [
@@ -145,7 +157,7 @@ annotate service.child1 with @(UI.LineItem #AssignmentRule: [
     {
         $Type         : 'UI.DataField',
         Value         : amount_from,
-        Label         : 'amount_from',
+        Label         : 'Amount From',
         ![@UI.Hidden] : {$edmJson: {$Or: [
             {$And: [
                 {$Ne: [
@@ -169,7 +181,7 @@ annotate service.child1 with @(UI.LineItem #AssignmentRule: [
     {
         $Type         : 'UI.DataField',
         Value         : amount_to,
-        Label         : 'amount_to',
+        Label         : 'Amount To',
         ![@UI.Hidden] : {$edmJson: {$Ne: [
             {$Path: 'condition'},
             'In Between',
@@ -179,7 +191,7 @@ annotate service.child1 with @(UI.LineItem #AssignmentRule: [
     {
         $Type         : 'UI.DataField',
         Value         : currency,
-        Label         : 'currency',
+        Label         : 'Currency',
         ![@UI.Hidden] : {$edmJson: {$Ne: [
             {$Path: 'assignment_criteria'},
             'Invoice Value',
@@ -190,23 +202,8 @@ annotate service.child1 with @(UI.LineItem #AssignmentRule: [
 annotate service.members with @(UI.LineItem #Addmembers: [{
     $Type: 'UI.DataField',
     Value: member_name,
-    Label: 'member_name',
+    Label: 'Member Name',
 },
-    {
-        $Type : 'UI.DataField',
-        Value : is_group,
-        Label : 'is_group',
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : id1,
-        Label : 'id',
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : position,
-        Label : 'position',
-    },
 
  ]);
 
@@ -306,3 +303,32 @@ annotate service.members with {
         },
         Common.ValueListWithFixedValues : true
 )};
+annotate service.child1 with @(
+    UI.LineItem #AssignmentRuleName : [
+    ]
+);
+annotate service.main with @(
+    UI.FieldGroup #AssignmentRuleName : {
+        $Type : 'UI.FieldGroupType',
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Value : assighnment_rule_name,
+                Label : 'Assignment Rule Name',
+            },],
+    }
+);
+annotate service.main with @(
+    UI.FieldGroup #comm : {
+        $Type : 'UI.FieldGroupType',
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Value : comment,
+                Label : '',
+            },],
+    }
+);
+annotate service.main with {
+    comment @UI.MultiLineText : true
+};

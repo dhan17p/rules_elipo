@@ -1,7 +1,7 @@
 const cds = require('@sap/cds',);
 module.exports = cds.service.impl(async function () {
 
-    let { assignment_criteria_help, condition_help, currency_help, member_help, main } = this.entities;
+    let { assignment_criteria_help, condition_help, currency_help, member_help, main,vendor_help } = this.entities;
     const c4re = await cds.connect.to('iflow');
     var first_assignment_criteria_help = true;
 
@@ -53,15 +53,18 @@ module.exports = cds.service.impl(async function () {
                 // spaces.forEach(space => {
                 entries.push({
                     value: 'Document Type',
-                    value2: 'Invoice'
+                    value2: 'Invoice',
+                    code : 'RE'
                 });
                 entries.push({
                     value: 'Document Type',
-                    value2: 'Debit Memo'
+                    value2: 'Debit Memo',
+                    code : 'SU'
                 });
                 entries.push({
                     value: 'Document Type',
-                    value2: 'Credit Memo'
+                    value2: 'Credit Memo',
+                    code : 'KG'
                 });
                 entries.push({
                     value: 'Invoice Value',
@@ -91,18 +94,18 @@ module.exports = cds.service.impl(async function () {
                     value: 'Invoice type',
                     value2: 'Service'
                 });
-                entries.push({
-                    value: 'Jurisdiction Code',
-                    value2: '330612010--DEMO1'
-                });
-                entries.push({
-                    value: 'Jurisdiction Code',
-                    value2: 'CA0017000--Californnia'
-                });
-                entries.push({
-                    value: 'Jurisdiction Code',
-                    value2: 'NY0000000--NewYork'
-                });
+                // entries.push({
+                //     value: 'Jurisdiction Code',
+                //     value2: '330612010--DEMO1'
+                // });
+                // entries.push({
+                //     value: 'Jurisdiction Code',
+                //     value2: 'CA0017000--Californnia'
+                // });
+                // entries.push({
+                //     value: 'Jurisdiction Code',
+                //     value2: 'NY0000000--NewYork'
+                // });
                 entries.push({
                     value: 'Supplier Type',
                     value2: 'Export'
@@ -111,6 +114,26 @@ module.exports = cds.service.impl(async function () {
                     value: 'Supplier Type',
                     value2: 'Domestic'
                 });
+                const resp = await c4re.get(`/dev/svendor`);
+                const spaces = resp.body.search_help;
+                spaces.forEach(space => {
+                    entries.push({
+                        
+                        value: 'Vendor',
+                        value2:`${space.code}--${space.description}`,
+                    });
+                });
+                const resp1 = await c4re.get(`/dev/search-help?master_id=0`);
+                const spaces1 = resp1.body.search_help;
+                spaces1.forEach(space => {
+                    entries.push({
+                        
+                        value: 'Jurisdiction Code',
+                        value2:`${space.code}--${space.master_name}`,
+                    });
+                });
+
+
 
 
                 // });
@@ -193,11 +216,44 @@ module.exports = cds.service.impl(async function () {
             req.error(500, err.message);
         }
     });
+    var first_vendor_help = true;
+    this.before('READ', vendor_help, async (req) => {
+        try {
+            if (first_vendor_help) {
+                // let pageno = 1;
+                const entries = [];
+                // while (true) {
+                const resp = await c4re.get(`/dev/svendor`);
+                cds.tx(req).run(DELETE(vendor_help));
+                // const spaces = resp.content;
+                const spaces = resp.body.search_help;
+                // if (spaces.length == 0) {
+                //     break;
+                // }
+                spaces.forEach(space => {
+                    entries.push({
 
+                        code: `${space.code}`,
+                        description: `${space.description}`,
+                    });
+                });
+                // pageno++;
+                // }
+                await cds.tx(req).run(INSERT.into(vendor_help).entries(entries));
+                // return spaces;
+                first_vendor_help = false;
+            }
+            return req;
+        } catch (err) {
+            req.error(500, err.message);
+        }
+    });
     this.on('POST', main, async (req) => {
         // const var1 = await SELECT.from(member_help).where({ id1: '3' });
         // const var3 = req.data.rel12[0].member_name;
         // const var2 = await SELECT.from(member_help).where({ name: req.data.rel12[0].member_name });
+        var params = req.data.assighnment_rule_name;
+        var comment = req.data.comment;
         const arr1 = [];
         const arr2 = [];
         for (i = 0; i < req.data.rel12.length; i++) {
@@ -212,6 +268,9 @@ module.exports = cds.service.impl(async function () {
         for (i = 0; i < req.data.rell1.length; i++) {
 
             let operatorSymbol;
+            let value1;
+
+           
 
             if (req.data.rell1[i].condition === 'Equal To') {
                 operatorSymbol = '=';
@@ -227,6 +286,30 @@ module.exports = cds.service.impl(async function () {
                 operatorSymbol = '='; // Defaulting to '=' for other cases
             }
 
+          
+            if(req.data.rell1[i].assignment_criteria == "Document Type" && req.data.rell1[i].condition == "Invoice"  ){
+                value1 = "RE"
+
+            }
+
+            else if(req.data.rell1[i].assignment_criteria == "Document Type" && req.data.rell1[i].condition == "Debit Memo"  ){
+                value1 = "SU"
+
+            }
+            else if(req.data.rell1[i].assignment_criteria == "Document Type" && req.data.rell1[i].condition == "Credit Memo"  ){
+                value1 = "KG"
+
+            }
+            if(req.data.rell1[i].assignment_criteria == "Vendor" || req.data.rell1[i].assignment_criteria == "Jurisdiction Code"){
+               let var22 = req.data.rell1[i].condition.split('--'); 
+               value1 = var22[0]
+            }
+            
+            else {
+                value1 = req.data.rell1[i].condition; 
+            }
+
+
 
             let type;
             if (req.data.rell1[i].assignment_criteria == 'Invoice Value') {
@@ -236,14 +319,14 @@ module.exports = cds.service.impl(async function () {
             }
 
 
-            let value1;
+           
             if (req.data.rell1[i].assignment_criteria == 'Invoice Value' && req.data.rell1[i].amount != null) {
-                value = 1;
+                value1 = req.data.rell1[i].amount;
                 arr2.push({
                     decider: req.data.rell1[i].assignment_criteria,
                     operator: `=`,
                     type: `${type}`,
-                    value1: `${req.data.rell1[i].condition}`,
+                    value1: `${value1}`,
                     value2: `${""}`,
                 });
                 arr2.push({
@@ -276,7 +359,7 @@ module.exports = cds.service.impl(async function () {
                     decider: req.data.rell1[i].assignment_criteria,
                     operator: `${operatorSymbol}`,
                     type: `${type}`,
-                    value1: `${req.data.rell1[i].condition}`,
+                    value1: `${value1}`,
                     value2: `${""}`,
                 })
 
@@ -296,35 +379,36 @@ module.exports = cds.service.impl(async function () {
         // })
 
         var body = {
-              approver:arr1,
+              approvers:arr1,
+              comments :req.data.comment,
               criteria:arr2
         }
-        //   try {
-        //     debugger
-        //     resp = await c4re.post('/group', body); 
-        //     const createEntity = await INSERT.into(Groups).entries(req.data);
-        //     if(statuscode = 200){
-        //       const g_id = req.data.group_id;
-        // //     const membersPromises = mem_list.map(async (memberData) => {
-        // //       cds.tx(req).run(DELETE(Members).where({ member_id : memberData.member_id }));
-        // //       const newMember = {
-        // //           ...memberData,
-        // //           group_id: g_id, // Set the group_id for the member
-        // //       };
-        // //       await INSERT.into(Members).entries(newMember);
-        // //   });
-        // //   await Promise.all(membersPromises);
+          try {
+            debugger
+            resp = await c4re.post(`/dev/rules?is_approval=n&rule_name=${params}`, body); 
+            // const createEntity = await INSERT.into(Groups).entries(req.data);
+            if(statuscode = 200){
+            //   const g_id = req.data.group_id;
+        //     const membersPromises = mem_list.map(async (memberData) => {
+        //       cds.tx(req).run(DELETE(Members).where({ member_id : memberData.member_id }));
+        //       const newMember = {
+        //           ...memberData,
+        //           group_id: g_id, // Set the group_id for the member
+        //       };
+        //       await INSERT.into(Members).entries(newMember);
+        //   });
+        //   await Promise.all(membersPromises);
 
-        //     return req.data;
-        //     }else{
-        //       req.error({
-        //         message: 'Internal error while creating "Group"',
-        //         code: 'GROUP_NOT_CREATED'
-        //       })
-        //     }
-        //   } catch (err) {
-        //       req.error(500, err.message);
-        //   }
+            return req.data;
+            }else{
+              req.error({
+                message: 'Internal error while creating "Rules"',
+                code: 'RULES_NOT_CREATED'
+              })
+            }
+          } catch (err) {
+              req.error(500, err.message);
+          }
     });
 
 

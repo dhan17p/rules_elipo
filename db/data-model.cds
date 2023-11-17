@@ -29,6 +29,7 @@ entity main{
   currency :Integer;
   amount_from : Integer;
   amount_to :Integer;
+  comment : String;
   rell1 :Composition of  many child1 on rell1.ID = ID;
   rel12 :Composition of  many members on rel12.ID= ID;
 }
@@ -38,6 +39,7 @@ entity child1{
   assighnment_rule_name : String;
   assignment_criteria: String;
   condition : String;
+  code:String;
   amount :Integer;
   currency :String;
   amount_from : Integer;
@@ -60,6 +62,7 @@ entity assignment_criteria_help{
 entity condition_help{
   value :String;
   value2: String;
+  code: String;
 
 }
 entity currency_help{
@@ -73,3 +76,7 @@ entity member_help{
   position: String;
 
 }
+entity vendor_help{
+  code: String;
+  description:String;
+};

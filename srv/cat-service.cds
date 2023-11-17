@@ -15,6 +15,7 @@ service CatalogService {
     entity condition_help as projection on my.condition_help;
     entity currency_help as projection on my.currency_help;
     entity member_help as projection on my.member_help;
+    entity vendor_help as projection on my.vendor_help;
 
 
 }
